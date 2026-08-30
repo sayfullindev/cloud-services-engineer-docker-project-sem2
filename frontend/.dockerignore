@@ -1,0 +1,14 @@
+# Dependency directories (remove the comment below to include it)
+.idea/
+.vscode/
+.DS_Store
+*.tgz
+
+# Docker stuff
+Dockerfile
+.dockerignore
+
+# Node stuff
+npm-debug.log*
+node_modules
+/dist
