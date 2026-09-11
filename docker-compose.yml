@@ -1,0 +1,135 @@
+services:
+  backend-prod:
+    profiles: [prod]
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: gabella187/sem2-docker-project-backend:0.0.1
+    
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:    { cpus: "0.50", memory: 64M }
+        reservations: { cpus: "0.10", memory: 16M }
+    environment:
+      - TZ=Europe/Moscow
+      - GOMAXPROCS=1
+      - GOMEMLIMIT=80MiB 
+    
+    networks:
+      - backend
+      
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    read_only: true
+
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8081/health"]
+      interval: 20s
+      timeout: 2s
+      retries: 3
+      start_period: 10s
+
+  backend-dev:
+    profiles: [dev]
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: gabella187/sem2-docker-project-backend:0.0.1
+    
+    restart: unless-stopped
+
+    environment:
+      - TZ=Europe/Moscow
+      - GOMAXPROCS=1
+      - GOMEMLIMIT=80MiB 
+    
+    networks:
+      - backend
+    ports:
+      - "8081:8081"
+
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8081/health"]
+      interval: 20s
+      timeout: 2s
+      retries: 3
+      start_period: 10s
+
+
+  frontend-prod:
+    profiles: [prod]
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: gabella187/sem2-docker-project-frontend:0.0.1
+
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:    { cpus: "0.50", memory: 64M }
+        reservations: { cpus: "0.10", memory: 16M }
+    environment:
+      - TZ=Europe/Moscow
+
+    ports:
+      - "80:8080"    
+    networks:
+      - web
+      - backend
+
+    depends_on:
+      backend:
+        condition: service_healthy
+
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    read_only: true
+
+    tmpfs:
+     - /run:uid=1001,gid=1001,mode=0755
+     - /var/cache/nginx:uid=1001,gid=1001,mode=0755
+
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 20s
+      timeout: 2s
+      retries: 3
+      start_period: 10s
+
+  frontend-dev:
+      profiles: [dev]
+      build:
+        context: ./frontend
+        dockerfile: Dockerfile
+      image: gabella187/sem2-docker-project-frontend:0.0.1
+
+      restart: unless-stopped
+      environment:
+        - TZ=Europe/Moscow
+      ports:
+        - "80:8080"    
+      networks:
+        - web
+        - backend
+
+      depends_on:
+        backend:
+          condition: service_healthy
+
+      tmpfs:
+      - /run:uid=1001,gid=1001,mode=0755
+      - /var/cache/nginx:uid=1001,gid=1001,mode=0755
+
+      healthcheck:
+        test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+        interval: 20s
+        timeout: 2s
+        retries: 3
+        start_period: 10s
+
+networks:
+  web:
+  backend:
+    internal: true
+
