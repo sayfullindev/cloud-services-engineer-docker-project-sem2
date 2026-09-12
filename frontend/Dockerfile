@@ -13,7 +13,7 @@ COPY . .
 
 RUN npm run build
 
-FROM nginx:1.27-alpine AS runtime
+FROM nginx:1.30-alpine AS runtime
 
 RUN adduser -D -H -u 1001 -s /sbin/nologin svc-frontend
 
