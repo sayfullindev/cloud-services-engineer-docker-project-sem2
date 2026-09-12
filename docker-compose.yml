@@ -98,35 +98,31 @@ services:
       start_period: 10s
 
   frontend-dev:
-      profiles: [dev]
-      build:
-        context: ./frontend
-        dockerfile: Dockerfile
-      image: gabella187/sem2-docker-project-frontend:0.0.1
-
-      restart: unless-stopped
-      environment:
-        - TZ=Europe/Moscow
-      ports:
-        - "80:8080"    
-      networks:
-        - web
-        - backend
-
-      depends_on:
-        backend:
-          condition: service_healthy
-
-      tmpfs:
-      - /run:uid=1001,gid=1001,mode=0755
-      - /var/cache/nginx:uid=1001,gid=1001,mode=0755
-
-      healthcheck:
-        test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
-        interval: 20s
-        timeout: 2s
-        retries: 3
-        start_period: 10s
+    profiles: [dev]
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: gabella187/sem2-docker-project-frontend:0.0.1
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Moscow
+    ports:
+      - "80:8080"    
+    networks:
+      - web
+      - backend
+    depends_on:
+      backend:
+        condition: service_healthy
+    tmpfs:
+    - /run:uid=1001,gid=1001,mode=0755
+    - /var/cache/nginx:uid=1001,gid=1001,mode=0755
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 20s
+      timeout: 2s
+      retries: 3
+      start_period: 10s
 
 networks:
   web:
