@@ -1,128 +1,86 @@
+x-backend-common: &backend-common
+  build:
+    context: ./backend
+    dockerfile: Dockerfile
+  image: gabella187/sem2-docker-project-backend:0.0.1
+  restart: unless-stopped
+  environment:
+    - TZ=Europe/Moscow
+    - GOMAXPROCS=1
+    - GOMEMLIMIT=50MiB
+  networks:
+    backend:
+      aliases:
+        - backend
+
+  healthcheck:
+    test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8081/health"]
+    interval: 20s
+    timeout: 2s
+    retries: 3
+    start_period: 10s
+
+x-frontend-common: &frontend-common
+  build:
+    context: ./frontend
+    dockerfile: Dockerfile
+  image: gabella187/sem2-docker-project-frontend:0.0.1
+  restart: unless-stopped
+  environment:
+    - TZ=Europe/Moscow
+  networks:
+    - web
+    - backend
+  ports:
+    - "80:8080"
+  tmpfs:
+   - /run:uid=1001,gid=1001,mode=0755
+   - /var/cache/nginx:uid=1001,gid=1001,mode=0755
+  healthcheck:
+    test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+    interval: 20s
+    timeout: 2s
+    retries: 3
+    start_period: 10s
+
 services:
   backend-prod:
     profiles: [prod]
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    image: gabella187/sem2-docker-project-backend:0.0.1
-    
-    restart: unless-stopped
+    <<: *backend-common
     deploy:
       resources:
         limits:    { cpus: "0.50", memory: 64M }
         reservations: { cpus: "0.10", memory: 16M }
-    environment:
-      - TZ=Europe/Moscow
-      - GOMAXPROCS=1
-      - GOMEMLIMIT=50MiB 
-    
-    networks:
-      - backend
-      
-    cap_drop: [ALL]
     security_opt: ["no-new-privileges:true"]
     read_only: true
-
-    healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8081/health"]
-      interval: 20s
-      timeout: 2s
-      retries: 3
-      start_period: 10s
+    cap_drop: [ALL]
 
   backend-dev:
     profiles: [dev]
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    image: gabella187/sem2-docker-project-backend:0.0.1
-    
-    restart: unless-stopped
-
-    environment:
-      - TZ=Europe/Moscow
-      - GOMAXPROCS=1
-      - GOMEMLIMIT=80MiB 
-    
-    networks:
-      - backend
+    <<: *backend-common
     ports:
       - "8081:8081"
 
-    healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8081/health"]
-      interval: 20s
-      timeout: 2s
-      retries: 3
-      start_period: 10s
-
-
   frontend-prod:
     profiles: [prod]
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    image: gabella187/sem2-docker-project-frontend:0.0.1
-
-    restart: unless-stopped
+    <<: *frontend-common
     deploy:
       resources:
         limits:    { cpus: "0.50", memory: 64M }
         reservations: { cpus: "0.10", memory: 16M }
-    environment:
-      - TZ=Europe/Moscow
-
-    ports:
-      - "80:8080"    
-    networks:
-      - web
-      - backend
-
-    depends_on:
-      backend:
-        condition: service_healthy
-
     cap_drop: [ALL]
     security_opt: ["no-new-privileges:true"]
     read_only: true
-
-    tmpfs:
-     - /run:uid=1001,gid=1001,mode=0755
-     - /var/cache/nginx:uid=1001,gid=1001,mode=0755
-
-    healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
-      interval: 20s
-      timeout: 2s
-      retries: 3
-      start_period: 10s
+    depends_on:
+      backend-prod:
+        condition: service_healthy
 
   frontend-dev:
     profiles: [dev]
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    image: gabella187/sem2-docker-project-frontend:0.0.1
-    restart: unless-stopped
-    environment:
-      - TZ=Europe/Moscow
-    ports:
-      - "80:8080"    
-    networks:
-      - web
-      - backend
+    <<: *frontend-common
     depends_on:
-      backend:
+      backend-dev:
         condition: service_healthy
-    tmpfs:
-    - /run:uid=1001,gid=1001,mode=0755
-    - /var/cache/nginx:uid=1001,gid=1001,mode=0755
-    healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
-      interval: 20s
-      timeout: 2s
-      retries: 3
-      start_period: 10s
 
 networks:
   web:
