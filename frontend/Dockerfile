@@ -22,7 +22,9 @@ COPY --chown=svc-frontend:svc-frontend nginx.conf /etc/nginx/conf.d/default.conf
 
 RUN touch /var/run/nginx.pid \
  && chown svc-frontend:svc-frontend /var/run/nginx.pid \
- && chown -R svc-frontend:svc-frontend /var/cache/nginx
+ && chown -R svc-frontend:svc-frontend /var/cache/nginx \
+ && mkdir /var/cache/proxy \
+ && chown -R svc-frontend:svc-frontend /var/cache/proxy 
 
 USER svc-frontend
 

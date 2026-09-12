@@ -42,6 +42,8 @@ x-frontend-common: &frontend-common
     timeout: 2s
     retries: 3
     start_period: 10s
+  volumes:
+    - nginx-cache:/var/cache/proxy
 
 services:
   backend-prod:
@@ -51,6 +53,7 @@ services:
       resources:
         limits:    { cpus: "0.50", memory: 64M }
         reservations: { cpus: "0.10", memory: 16M }
+      replicas: ${COUNT_REPLICS:-3}
     security_opt: ["no-new-privileges:true"]
     read_only: true
     cap_drop: [ALL]
@@ -64,7 +67,8 @@ services:
       backend:
        aliases:
         - backend
-      web:             
+      web:          
+       
   frontend-prod:
     profiles: [prod]
     <<: *frontend-common
@@ -91,3 +95,5 @@ networks:
   backend:
     internal: true
 
+volumes:
+  nginx-cache:
