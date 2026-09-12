@@ -14,7 +14,7 @@ services:
     environment:
       - TZ=Europe/Moscow
       - GOMAXPROCS=1
-      - GOMEMLIMIT=80MiB 
+      - GOMEMLIMIT=50MiB 
     
     networks:
       - backend
