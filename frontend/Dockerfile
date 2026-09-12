@@ -31,4 +31,4 @@ EXPOSE 8080
 HEALTHCHECK --interval=20s --timeout=2s --start-period=5s --retries=3 \
     CMD wget -q -O /dev/null http://127.0.0.1:8080/healthz || exit 1
 
-CMD ["nginx", "-g", "worker_processes 1", "daemon off;"]
+CMD ["nginx", "-g", "daemon off;"]
